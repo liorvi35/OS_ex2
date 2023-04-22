@@ -1,12 +1,13 @@
 CC = gcc
 FLAGS = -Wall -g
-SHARED = --shared -fPIC
-LIBS = libcodecA.so libcodecB.so
-TARGETS = cmp copy # $(LIBS) encode decode
+TARGETS = cmp copy libcodecA.so libcodecB.so encode decode stshell
 
 .PHONY: all clean
 
 all: $(TARGETS)
+
+stshell: stshell.c
+	$(CC) $(FLAGS) -o $@ $^
 
 cmp: cmp.c
 	$(CC) $(FLAGS) -o $@ $^
@@ -14,17 +15,19 @@ cmp: cmp.c
 copy: copy.c
 	$(CC) $(FLAGS) -o $@ $^
 
-# encode: encode.c $(LIBS)
-# 	$(CC) $(FLAGS) -o $@ $^
+encode: encode.c
+	$(CC) $(FLAGS) -o $@ $^
 
-# decode: decode.c $(LIBS)
-# 	$(CC) $(FLAGS) -o $@ $^
+decode: decode.c
+	$(CC) $(FLAGS) -o $@ $^
 
-# libcodecA.so: codecA.c
-# 	$(CC) $(FLAGS) $(SHARED) -c $@ $^ 
+libcodecA.so: codecA.c
+	$(CC) $(FLAGS) -fPIC -c $^
+	gcc -shared -o $@ codecA.o
 
-# libcodecB.so: codecB.c
-# 	$(CC) $(FLAGS) $(SHARED) -c $@ $^
+libcodecB.so: codecB.c
+	$(CC) $(FLAGS) -fPIC -c $^
+	gcc -shared -o $@ codecB.o
 
 clean:
-	rm -f $(TARGETS) *.o
+	rm -f *.o $(TARGETS) 
