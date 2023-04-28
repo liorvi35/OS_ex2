@@ -6,8 +6,9 @@ TARGETS = cmp copy libcodecA.so libcodecB.so encode decode stshell
 
 all: $(TARGETS)
 
-stshell: stshell.c
-	$(CC) $(FLAGS) -o $@ $^
+stshell: stshell.c stshell.h 
+	$(CC) $(FLAGS) -c $^
+	$(CC) $(FLAGS) -o $@ $@.o
 
 cmp: cmp.c
 	$(CC) $(FLAGS) -o $@ $^
@@ -30,4 +31,4 @@ libcodecB.so: codecB.c
 	gcc -shared -o $@ codecB.o
 
 clean:
-	rm -f *.o $(TARGETS) 
+	rm -f *.o *.h.gch $(TARGETS) 
