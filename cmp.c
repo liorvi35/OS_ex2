@@ -1,3 +1,14 @@
+/**
+ * @brief Assignment 2, `Operating Systems` course at Ariel University
+ * 
+ * this file contains implementation for compare tool
+ * 
+ * @version 1
+ * @since 28/04/2023
+ * @authors Lior Vinman & Yoad Tamar
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,6 +17,13 @@
 int compare_files(FILE*, FILE*, char);
 
 
+/**
+ * @brief this function compares between two files
+ * @param f1 first file
+ * @param f2 seconds file
+ * @param iFlag ignore flag to ignore upper and lower case
+ * @return 0 on success , 1 on failure
+*/
 int compare_files(FILE *f1, FILE *f2, char iFlag)
 {   
     char c1 = '\0', c2 = '\0';
@@ -18,17 +36,20 @@ int compare_files(FILE *f1, FILE *f2, char iFlag)
         {
             if(!(iFlag && ((c1 == c2 + 32) || (c2 == c1 + 32))))
             {
-                return(EXIT_FAILURE);
+                return EXIT_FAILURE;
             }
         }
         c1 = fgetc(f1);
         c2 = fgetc(f2);
     }
 
-    return(EXIT_SUCCESS);
+    return EXIT_SUCCESS;
 }
 
 
+/**
+ * @brief main function, implementing the cmp tool
+*/
 int main(int argc, char *argv[])
 {
     if(argc < 3 || argc > 5)

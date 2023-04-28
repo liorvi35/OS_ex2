@@ -1,3 +1,13 @@
+/**
+ * @brief Assignment 2, `Operating Systems` course at Ariel University
+ * 
+ * this file contains implementation for copy tool
+ * 
+ * @version 1
+ * @since 28/04/2023
+ * @authors Lior Vinman & Yoad Tamar
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,6 +18,12 @@ int check(FILE*, char*, char);
 void nonExist_or_forceCopy(FILE*, FILE*, char*);
 
 
+
+/**
+ * @brief this function copy one file to another
+ * @param f1 source
+ * @param f2 destination
+*/
 void copy_files(FILE *f1, FILE *f2)
 {
     size_t bytes_read = 0;
@@ -19,9 +35,15 @@ void copy_files(FILE *f1, FILE *f2)
     }
 }
 
+/**
+ * @brief this function open the dest in writing mode and copy the files
+ * @param f1 source
+ * @param f2 destination
+ * @param path a path to new file
+*/
 void nonExist_or_forceCopy(FILE *f1, FILE *f2, char *path)
 {
-    f2 = fopen(path, "w");
+    f2 = fopen(path, "wb");
     if(f2 == NULL)
     {
         fprintf(stderr, "general failure\n");
@@ -34,6 +56,14 @@ void nonExist_or_forceCopy(FILE *f1, FILE *f2, char *path)
     f2 = NULL;
 }
 
+
+/**
+ * @brief this function checks if file already exists
+ * @param f file to copy
+ * @param path destination file
+ * @param fFlag force flag
+ * @return 0 on success , 1 on failure
+*/
 int check(FILE *f, char *path, char fFlag)
 {
     FILE *copy = NULL;
@@ -52,17 +82,21 @@ int check(FILE *f, char *path, char fFlag)
             nonExist_or_forceCopy(f, copy, path);
         }
 
-        return(EXIT_SUCCESS);
+        return EXIT_SUCCESS;
     }
     else
     {
         fclose(copy);
         copy = NULL;
 
-        return(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
 }
 
+
+/**
+ * @brief main function, implementing the copy tool
+*/
 int main(int argc, char *argv[])
 {
     if(argc < 3 || argc > 5)

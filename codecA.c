@@ -1,3 +1,14 @@
+/**
+ * @brief Assignment 2, `Operating Systems` course at Ariel University
+ * 
+ * this file contains implementation of first coder-decoder
+ * 
+ * @version 1
+ * @since 28/04/2023
+ * @authors Lior Vinman & Yoad Tamar
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -6,6 +17,11 @@ char* encode(char*);
 char* decode(char*);
 
 
+/**
+ * @brief this function encodes upper case to lower case and vise versa
+ * @param input a string to encode
+ * @return encoded string
+*/
 char* encode(char *input)
 {
     int length = 1;
@@ -44,6 +60,12 @@ char* encode(char *input)
     return result;
 }
 
+
+/**
+ * @brief this function decodes upper case to lower case and vise versa
+ * @param input a string to decode
+ * @return decoded string
+*/
 char* decode(char *input)
 {
     int length = 1;

@@ -1,3 +1,14 @@
+/**
+ * @brief Assignment 2, `Operating Systems` course at Ariel University
+ * 
+ * this file contains implementation for decoder tool
+ * 
+ * @version 1
+ * @since 28/04/2023
+ * @authors Lior Vinman & Yoad Tamar
+*/
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -7,6 +18,10 @@
 #define CODEC_A "./libcodecA.so"
 #define CODEC_B "./libcodecB.so"
 
+
+/**
+ * @brief main function, dynamically loads the codec and uses the decoder
+*/
 int main(int argc, char *argv[])
 {
     if(argc != 3)
