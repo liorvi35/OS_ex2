@@ -1,3 +1,14 @@
+/**
+ * @brief Assignment 2, `Operating Systems` course at Ariel University
+ * 
+ * this file contains declarations for basic shell
+ * 
+ * @version 1
+ * @since 28/04/2023
+ * @authors Lior Vinman & Yoad Tamar
+*/
+
+
 #ifndef STSHELL_H
 #define STSHELL_H
 
@@ -16,9 +27,14 @@
 #define MAX_ARGUMENT 10
 
 #define NOTHING 0
-#define RIGHT 1
+#define WRITE 1
 #define APPEND 2
 
+
+#define WRITE_REDIRECTOR ">"
+#define APPEND_REDIRECTOR ">>"
+#define PIPE "|"
+#define SPACE " "
 
 void ignore();
 int getType(char**);
@@ -27,6 +43,6 @@ void spilt_command(char* [MAX_LENGHT][MAX_ARGUMENT], char*);
 void execute(char** );
 int numberOfArgs(char**);
 int numberOfCommands(char* [MAX_LENGHT][MAX_ARGUMENT]);
-void handlePipes(int [MAX_LENGHT - 1][2], int, int );
+void handlePipes(int [MAX_LENGHT - 1][2], int, int);
 
 #endif

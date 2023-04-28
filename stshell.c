@@ -1,79 +1,43 @@
+/**
+ * @brief Assignment 2, `Operating Systems` course at Ariel University
+ * 
+ * this file contains implementation for basic shell
+ * 
+ * @version 1
+ * @since 28/04/2023
+ * @authors Lior Vinman & Yoad Tamar
+*/
+
+
 #include "stshell.h"
 
-int main()
-{
-	char data[BUFFER_SIZE];
-	char* splitData[MAX_LENGHT][MAX_ARGUMENT] = {NULL};
-	int pipes[MAX_LENGHT-1][2];
-	int lenght = 0;
 
-	// ignoring the ^C
-	signal(SIGINT, ignore);
-
-	while(1)
-	{
-		// get commands from user
-	    printf("> ");
-	    fgets(data, BUFFER_SIZE, stdin);
-	    data[strcspn(data, "\n")] = 0; // replace \n with \0
-
-		// parsering the commands
-		spilt_command(splitData, data);
-		lenght = numberOfCommands(splitData);
-
-	    /* Is command empty */ 
-	    if (splitData[0][0] == NULL){ continue; }
-
-		/* Is exit the stshell*/
-		if (strcmp(splitData[0][0], "exit") == 0){ return 0; }
-
-		
-		pipe(pipes[0]);
-		pipe(pipes[1]);
-		for(int i = 0; i < lenght; i++)//commands[i][0] != NULL; i++)
-		{
-			if(fork()==0)
-			{
-				// make ^C be a valid option.
-				signal(SIGINT, SIG_DFL);
-				
-				/* prepare the pipes before running the commands */
-				handlePipes(pipes, lenght, i);
-
-				/* run the current command */
-				execute(splitData[i]);
-			}
-		}
-
-		close(pipes[0][1]);
-		close(pipes[0][0]);
-		close(pipes[1][1]);
-		close(pipes[1][0]);
-		
-		for(int i = 0; splitData[i][0] != NULL; i++)
-		{
-			wait(NULL);
-		}
-	}
-}
-
-
+/**
+ * @brief this function is the signal-caller function,
+ * used to interrupt the CTRL+C signal, do nothing (so CTRL+C do nothing)
+*/
 void ignore()
 {
-	printf("\n");
+	fprintf(stdout, "\n");
+	return;
 }
 
 
+/**
+ * @brief Determines the type of command based on its arguments
+ * @param args An array of command arguments
+ * @return An integer representing the type of command
+ */
 int getType(char** command)
 {
 	int argIndx = 0;
 	while(argIndx < MAX_ARGUMENT && command[argIndx] != NULL)
 	{
-		if(strcmp(command[argIndx], ">") == 0)
+		if(strcmp(command[argIndx], WRITE_REDIRECTOR) == 0)
 		{
-			return RIGHT;
+			return WRITE;
 		}
-		if(strcmp(command[argIndx], ">>") == 0)
+		if(strcmp(command[argIndx], APPEND_REDIRECTOR) == 0)
 		{
 			return APPEND;
 		}
@@ -82,79 +46,77 @@ int getType(char** command)
 	return NOTHING;
 }
 
+
+/**
+ * @brief this function handles executing a command with output redirection to a file.
+ * @param command An array of command arguments, with the last argument being the destination file name.
+ * @param truncORAppend An integer value indicating whether the output should be truncated or appended to the destination file.
+*/
 void HandleCommands(char** command, int truncORAppend)
 {
 	int argsNum = numberOfArgs(command);
 	char* dstFileName = command[argsNum - 1];
 	
-	// remove the direct sign and the dst file name from list.
 	command[argsNum - 1] = NULL;
 	command[argsNum - 2] = NULL;
 	
-	//change the dst in fd
 	int fileFD = open(dstFileName, O_WRONLY | O_CREAT | truncORAppend, S_IRUSR | S_IWUSR);
-	close(STDOUT_FILENO);          // close output
-	dup2(fileFD, STDOUT_FILENO);   // change output to be the file
-	close(fileFD);                 // close the old place of dst file in fd
+	close(STDOUT_FILENO); 
+	dup2(fileFD, STDOUT_FILENO);
+	close(fileFD);
 
-	execvp(command[0], command);   // run the command
+	execvp(command[0], command); 
 }
 
-
-/*
-Parser string of commands and arguments/flags into
-structre of 3d array.
-For example: "ls -all | sort | grep txt"
-will be [["ls", "-all"], ["sort"], ["grep", "txt"]]
-input: pointer to 3d array and string of the full string.
-output: void
+/**
+ * @brief This function takes a command string and splits it into an array of arrays of commands.
+ * @param commands A 2D char array representing the commands and their arguments. This array will be modified by the function.
+ * @param stream The command string to be split.
 */
 void spilt_command(char* commands[MAX_LENGHT][MAX_ARGUMENT], char* stream)
 {
-	// divide to commands between the pipes (|)
-	commands[0][0] = strtok(stream, "|");
+	commands[0][0] = strtok(stream, PIPE);
 	for(int i = 1; i < MAX_LENGHT; i++)
 	{
-		commands[i][0] = strtok(NULL, "|");
+		commands[i][0] = strtok(NULL, PIPE);
 	}
 
-	// divide each command to parameters
 	for(int i = 0; i < MAX_LENGHT; i++)
 	{
-		commands[i][0] = strtok(commands[i][0], " ");
+		commands[i][0] = strtok(commands[i][0], SPACE);
 		for(int j = 1; j < MAX_ARGUMENT; j++)
 		{
-			commands[i][j] = strtok(NULL, " ");
+			commands[i][j] = strtok(NULL, SPACE);
 		}
 	}
 }
 
-
-/*
-Select the correct option for running command,
-according to the command type (direct or not..)
-input: pointer to command.
-output: void
+/**
+ * @brief This function executes a given command by calling the appropriate system call.
+ * @param command A null-terminated array of null-terminated strings representing the command and its arguments.
 */
 void execute(char** command)
 {
 	int type = getType(command);
-
 	if (type == NOTHING)
+	{
 		execvp(command[0], command);
-	else if (type == RIGHT)
+	}	
+	else if (type == WRITE)
+	{
 		HandleCommands(command, O_TRUNC);
+	}	
 	else if (type == APPEND)
+	{
 		HandleCommands(command, O_APPEND);
-
+	}
 }
 
 
-/*
-counter the number of arguments in command.
-For example: ["ls", "-a"] return 2.
-input: pointer to command
-output: number as explain abouv.
+/**
+ * @brief This function counts the number of arguments in a given command.
+ * @param command A null-terminated array of null-terminated strings representing the command and its arguments.
+ * @return The number of arguments in the command.
 */
 int numberOfArgs(char** command)
 {
@@ -164,10 +126,10 @@ int numberOfArgs(char** command)
 }
 
 
-/*
-counter the number of commands
-input: pointer to commands 3D array
-output: number as explain abouv.
+/**
+ * @brief This function counts the number of commands in a given array of arrays of commands.
+ * @param commands A 2D char array representing the commands and their arguments.
+ * @return The number of commands in the array.
 */
 int numberOfCommands(char* commands[MAX_LENGHT][MAX_ARGUMENT])
 {
@@ -178,10 +140,11 @@ int numberOfCommands(char* commands[MAX_LENGHT][MAX_ARGUMENT])
 }
 
 
-/*
-Prepre the pipes according to the order of the current command.
-input: pipes array, number of commands and number of current command
-output: void
+/**
+ * @brief This function handles the redirection of input and output for commands in a pipeline.
+ * @param pipes A 2D array of file descriptors for the pipeline.
+ * @param numberOfCommands The total number of commands in the pipeline.
+ * @param commandNo The position of the current command in the pipeline.
 */
 void handlePipes(int pipes[MAX_LENGHT - 1][2], int numberOfCommands, int commandNo)
 {
@@ -206,9 +169,70 @@ void handlePipes(int pipes[MAX_LENGHT - 1][2], int numberOfCommands, int command
 		close(STDIN_FILENO);
 		dup2(pipes[1][0], STDIN_FILENO);
 	}
-
-	close(pipes[0][1]);
+	
 	close(pipes[0][0]);
-	close(pipes[1][1]);
+	close(pipes[0][1]);
 	close(pipes[1][0]);
+	close(pipes[1][1]);
+}
+
+
+/**
+ * @brief main function, implementing basic shell 
+*/
+int main(int argc, char **argv)
+{
+	char data[BUFFER_SIZE] = {0};
+	char* splitData[MAX_LENGHT][MAX_ARGUMENT] = {0};
+	int pipes[MAX_LENGHT-1][2] = {0};
+	int lenght = 0, i = 0;
+
+	signal(SIGINT, ignore);
+
+	while(1)
+	{
+	    fprintf(stdout, "%s ", WRITE_REDIRECTOR);
+
+	    fgets(data, BUFFER_SIZE, stdin);
+	    data[strcspn(data, "\n")] = 0;
+
+		spilt_command(splitData, data);
+		lenght = numberOfCommands(splitData);
+
+	    if(splitData[0][0] == NULL)
+		{
+			continue; 
+		}
+		else if(!strcmp(splitData[0][0], "exit"))
+		{
+			return 0; 
+		}
+		else
+		{
+			pipe(pipes[0]);
+			pipe(pipes[1]);
+
+			i = 0;
+			for(i = 0; i < lenght; i++)
+			{
+				if(fork() == 0)
+				{
+					signal(SIGINT, SIG_DFL);
+					handlePipes(pipes, lenght, i);
+					execute(splitData[i]);
+				}
+			}
+
+			close(pipes[0][0]);
+			close(pipes[0][1]);
+			close(pipes[1][0]);
+			close(pipes[1][1]);
+
+			i = 0;
+			for(i = 0; splitData[i][0] != NULL; i++)
+			{
+				wait(NULL);
+			}
+		}
+	}
 }
